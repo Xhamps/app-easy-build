@@ -4,7 +4,7 @@ let RepositoryModel = require('../model/repository');
 let Boom = require('boom');
 
 function RepositoryController () {
-  this.model = RepositoryModel;
+  this.model = new RepositoryModel();
 }
 
 module.exports = RepositoryController;
@@ -13,7 +13,6 @@ RepositoryController.prototype.list = function (request, reply) {
   this.model.list()
     .then(reply)
     .catch((err) => {
-      console.log(err);
       reply(Boom.badImplementation(err.message));
     });
 };

@@ -8,37 +8,79 @@ let fs        = require('fs');
 let mkdirp    = require('mkdirp');
 
 let helperGit = {
-  mapConfig: function(repo){
-    let deferred = Promise.pending();
-    let configFile = Path.join(__dirname, '../', 'repos', repo, '.git', 'config');
 
-    gitConfig(configFile, function (err, config){
-      if(err)
-          deferred.reject(err);
+  buildPath: function(folder){
+    return Path.join(__dirname, '../', 'repos', folder.replace(' ', '_'))
+  },
 
-      deferred.resolve({
-        name: repo.replace('_', ' '),
-        url: config['remote "origin"'].url
+  mapConfig: function(Class){
+    return  function(repo){
+      return new Promise((resolve, reject) => {
+        let configFile = Path.join(__dirname, '../', 'repos', repo, '.git', 'config');
+
+        gitConfig(configFile, function (err, config){
+          if(err)
+              reject(err);
+
+          let name = repo.replace('_', ' ');
+          let uri = config['remote "origin"'].url;
+
+          var obj = {};
+
+          if(Class){
+            obj = new Class(name, uri);
+          }else{
+            obj = {
+              name: name,
+              url: uri
+            }
+          }
+
+          resolve(obj);
+        });
       });
-    });
-
-    return deferred.promise;
+    }
   },
 
   clone: function(url, folder){
-    let deferred = Promise.pending();
-    let path = Path.join(__dirname, '../', 'repos', folder.replace(' ', '_'));
-    let opts = { username: url.split('@')[0] };
+    return new Promise((resolve, reject) => {
+      let path = this.buildPath(folder);
+      let opts = { username: url.split('@')[0] };
 
-    if (fs.existsSync(path)){
-      deferred.reject(new Error("Repository already exists"));
-    }
+      if (fs.existsSync(path))
+        reject(new Error("Repository already exists"));
 
-    mkdirp.sync(path);
+      mkdirp.sync(path);
 
-    git.clone(path, url, opts, function(){ deferred.resolve({ok: true}); });
-    
-    return deferred.promise;
+      git.clone(path, url, opts, function(){ resolve({ok: true}); });
+    });
+  },
+
+  getBranches: function(path, Class){
+    return new Promise((resolve, reject) => {
+      let repo = git(path);
+
+      repo.getBranches((err, branches) => {
+        if(err)
+          reject(err);
+
+        branches.others.push(branches.current);
+
+        Promise.map(branches.others, (branch) => {
+            let name = branch.replace('remotes/origin/', '');
+
+            if(name.indexOf('HEAD') === -1)
+              return new Class(name);
+
+            return false;
+          }).then(function(result){
+            return result.filter((branch) => { return !!branch});
+          })
+          .then(resolve)
+          .catch(reject);
+      });
+
+    });
   }
 };
 

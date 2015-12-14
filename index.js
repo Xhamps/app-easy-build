@@ -8,7 +8,3 @@ server.start((err) => {
 
   console.log('info', 'Server running at: ' + server.info.uri);
 });
-
-
-
-
