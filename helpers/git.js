@@ -6,6 +6,8 @@ let Path      = require('path');
 let git       = require('gitty');
 let fs        = require('fs');
 let mkdirp    = require('mkdirp');
+let shell     = require('shelljs');;
+let moutArray = require('mout/array');;
 
 let helperGit = {
 
@@ -58,27 +60,31 @@ let helperGit = {
 
   getBranches: function(path, Class){
     return new Promise((resolve, reject) => {
-      let repo = git(path);
+      shell.cd(path);
+      let result = shell.exec('git branch --all');
 
-      repo.getBranches((err, branches) => {
-        if(err)
-          reject(err);
+      if(result.code !== 0)
+        return reject(new Error("Erro na execução da quer"));
 
-        branches.others.push(branches.current);
+      let data = result.output;
 
-        Promise.map(branches.others, (branch) => {
-            let name = branch.replace('remotes/origin/', '');
+      data = data.split('\n');
+      data = data.map((branch) => {
+        var name; 
 
-            if(name.indexOf('HEAD') === -1)
-              return new Class(name);
+        name = branch.slice(2,branch.length).replace('remotes/origin/', '');
 
-            return false;
-          }).then(function(result){
-            return result.filter((branch) => { return !!branch});
-          })
-          .then(resolve)
-          .catch(reject);
+        if(name.indexOf(' ->') > -1){
+          name = name.slice(0, name.indexOf(' ->'));
+        }
+
+        return name;
       });
+      data = data.filter( (branch) => { return !!branch; });
+      data = moutArray.unique(data, (branch1, branch2) => { return branch1 === branch2});
+      data = data.map( (branch) => {return new Class(branch);} );
+
+      resolve(data); 
 
     });
   }

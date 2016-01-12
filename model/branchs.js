@@ -12,12 +12,13 @@ function BranchsModel(name, repo){
   this.links = {};
   this._repo = repo;
 
-  if(this.name && this._repo)
-    this.bildLinks();
+  if(!!this.name && !!this._repo)
+    this.buildLinks();
 };
 
 BranchsModel.prototype.buildLinks = function() {
   let nameRepo =  this._repo.buildName();
+
   this.links = {
     build:{
       ios: 'http://0.0.0.0:8000/repository/' + nameRepo + '/branch/' + this.name + '/build/ios',
