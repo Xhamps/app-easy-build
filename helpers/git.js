@@ -6,8 +6,8 @@ let Path      = require('path');
 let git       = require('gitty');
 let fs        = require('fs');
 let mkdirp    = require('mkdirp');
-let shell     = require('shelljs');;
-let moutArray = require('mout/array');;
+let shell     = require('shelljs');
+let moutArray = require('mout/array');
 
 let helperGit = {
 
@@ -87,7 +87,17 @@ let helperGit = {
       resolve(data); 
 
     });
-  }
+  },
+
+  clean: function(path){
+    shell.exec('git checkout -- .');
+    shell.exec('git clean -df');
+  },
+
+  checkout:function(branch){
+    shell.exec('git checkout ' + branch.name);
+  },
+
 };
 
 module.exports = helperGit;

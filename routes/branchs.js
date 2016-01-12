@@ -11,10 +11,26 @@ exports.register = (server, options, next) => {
   server.route([
     {
       method: 'GET',
-      path: '/repository/{name}/branchs',
+      path: '/repository/{repo}/branchs',
       config: {
         handler: controller.list,
         validate: Validator.list()
+      }
+    },
+    {
+      method: 'GET',
+      path: '/repository/{repo}/branch/{branch}/build/{version}',
+      config: {
+        handler: controller.build,
+        validate: Validator.build()
+      }
+    },
+    {
+      method: 'GET',
+      path: '/repository/{repo}/branch/{base}/{branch}/build/{version}',
+      config: {
+        handler: controller.build,
+        validate: Validator.build()
       }
     }
   ]);

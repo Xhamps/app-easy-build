@@ -4,11 +4,16 @@
 let Joi = require('joi');
 
 let BranchsValidator = {
-  list: list
+  list: list,
+  build: build
 };
 
 module.exports = BranchsValidator;
 
 function list() {
+  return {};
+}
+
+function build() {
   return {};
 }
